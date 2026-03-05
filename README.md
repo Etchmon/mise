@@ -2,6 +2,21 @@
 
 The Next.js Cookbook is a web application that allows users to organize and manage their recipes in a digital format. It provides a user-friendly interface for creating and editing recipes, creating cookbooks, and exploring a wide variety of recipes from other users.
 
+## Live Demo
+
+[View Live Demo](https://nextjs-cookbook-cngdvy0e5-etchmon.vercel.app/)
+
+## Screenshots
+
+<!-- TODO: Replace placeholders with actual screenshots -->
+<!-- Instructions: Run the app locally with `npm run dev`, take screenshots, and replace files in /screenshots folder -->
+
+| Homepage | Recipe Detail | Create Recipe |
+|:---:|:---:|:---:|
+| ![Homepage](./screenshots/homepage.png) | ![Recipe Detail](./screenshots/recipe-detail.png) | ![Create Recipe](./screenshots/create-recipe.png) |
+
+*Replace the placeholder images in `/screenshots` folder with actual screenshots of the application.*
+
 ## Technologies Used
 
 - Next.js: A React framework for building server-side rendered and statically generated web applications.
@@ -31,6 +46,39 @@ This project covers the following concepts:
 - Client-side data fetching with 'getStaticProps' and 'getServerSideProps'
 - Form handling in Next.js
 - Authentication with Next.js
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18 or higher)
+- MongoDB (local or Atlas cluster)
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/Etchmon/nextjs-cookbook.git
+cd nextjs-cookbook
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Set up environment variables:
+```bash
+cp .env.local.example .env.local
+# Edit .env.local with your MongoDB URI and NextAuth credentials
+```
+
+4. Run the development server:
+```bash
+npm run dev
+```
+
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Contributing
 
