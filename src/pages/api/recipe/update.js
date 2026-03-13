@@ -1,6 +1,7 @@
 // Imports
 import clientPromise from '../../../../lib/mongodb';
 import { getSession } from "next-auth/react";
+import { ObjectId } from 'mongodb';
 
 export default async function updateRecipe(req, res) {
     if (req.method !== 'PUT') {
@@ -17,14 +18,27 @@ export default async function updateRecipe(req, res) {
 
     const { id, title, description, ingredients, instructions } = req.body;
 
+    if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid recipe ID' });
+    }
+
     try {
         const client = await clientPromise;
         const db = await client.db("CBD");
         const recipeCollection = await db.collection("Recipes");
 
+        // Ownership check — only the recipe's author may update it
+        const existing = await recipeCollection.findOne({ _id: new ObjectId(id) });
+        if (!existing) {
+            return res.status(404).json({ message: 'Recipe not found' });
+        }
+        if (existing.author !== session.user.username) {
+            return res.status(403).json({ message: 'Forbidden' });
+        }
+
         // Update the recipe in the database
-        const result = await collection.updateOne(
-            { _id: id },
+        const result = await recipeCollection.updateOne(
+            { _id: new ObjectId(id) },
             {
                 $set: {
                     title,

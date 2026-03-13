@@ -53,7 +53,7 @@ const CookbookForm = (props) => {
             isValid = false;
         }
 
-        if (title.trim() === "") {
+        if (description.trim() === "") {
             validationErrors.description = "Description is required";
             isValid = false;
         }
@@ -113,51 +113,76 @@ const CookbookForm = (props) => {
     } else {
 
         return (
-            <div className={`bg-gray-900 h-full mx-auto text-gray-300 grid grid-cols-1 lg:mt-10 lg:grid-cols-2 ${load ? 'opacity-100 transition-opacity duration-500 ease-in-out' : 'opacity-0'
+            <div className={`bg-stone-950 h-full mx-auto text-stone-200 grid grid-cols-1 lg:mt-10 lg:grid-cols-2 ${load ? 'opacity-100 transition-opacity duration-500 ease-in-out' : 'opacity-0'
                 }`}>
                 <div className="flex-1 flex flex-col justify-center lg:justify-start items-center lg:items-start px-4 sm:px-0 mt-2 md:mt-10 w-full">
-                    <form className="w-full">
-                        <h1 className="text-3xl font-bold mb-4">Create a Cookbook</h1>
+                    <form className="w-full" noValidate>
+                        <h1 className="text-3xl font-bold mb-4 text-red-400">Create a Cookbook</h1>
 
                         <label className="block mb-4">
-                            <span className="text-lg font-semibold">Cookbook name:</span>
-                            <input type="text" name="title" className="block w-full bg-gray-800 border-gray-600 border-2 py-2 px-4 rounded-lg mt-2 text-gray-300" value={value.title} onChange={handleChange} />
-                            {errors.title && <p className="text-red-500">{errors.title}</p>}
+                            <span className="text-lg font-semibold text-stone-200">Cookbook name:</span>
+                            <input
+                                type="text"
+                                name="title"
+                                className="block w-full bg-stone-800 border-stone-600 border-2 py-2 px-4 rounded-lg mt-2 text-stone-100"
+                                value={value.title}
+                                onChange={handleChange}
+                                aria-required="true"
+                                aria-invalid={!!errors.title}
+                                aria-describedby={errors.title ? "title-error" : undefined}
+                            />
+                            {errors.title && <p id="title-error" role="alert" className="text-red-400 text-sm mt-1">{errors.title}</p>}
                         </label>
 
                         <label className="block mb-4">
-                            <span className="text-lg font-semibold">Description:</span>
-                            <textarea name="description" className="block w-full bg-gray-800 border-gray-600 border-2 py-2 px-4 rounded-lg mt-2 text-gray-300" value={value.description} onChange={handleChange} />
-                            {errors.description && <p className="text-red-500">{errors.description}</p>}
+                            <span className="text-lg font-semibold text-stone-200">Description:</span>
+                            <textarea
+                                name="description"
+                                className="block w-full bg-stone-800 border-stone-600 border-2 py-2 px-4 rounded-lg mt-2 text-stone-100"
+                                value={value.description}
+                                onChange={handleChange}
+                                aria-required="true"
+                                aria-invalid={!!errors.description}
+                                aria-describedby={errors.description ? "description-error" : undefined}
+                            />
+                            {errors.description && <p id="description-error" role="alert" className="text-red-400 text-sm mt-1">{errors.description}</p>}
                         </label>
 
-                        <button className="bg-green-600 text-white p-4 rounded-lg hover:bg-green-500 w-full" onClick={handleSubmit}>Submit</button>
+                        <button className="bg-rose-600 text-white p-4 rounded-lg hover:bg-rose-500 w-full font-semibold" onClick={handleSubmit}>Save Cookbook</button>
                     </form>
                 </div>
 
                 <div className="flex-1 flex flex-wrap grid grid-cols-2 mt-8 justify-center items-center">
                     <div className="h-full w-full overflow-y-auto pr-4 text-center">
-                        <h2 className="text-2xl font-bold mb-4">Recipes</h2>
+                        <h2 className="text-2xl font-bold mb-4 text-red-400">Your Recipes</h2>
                         <ul className="inline-block max-width-content items-center">
                             {myRecipes.map(recipe => (
-                                <li key={recipe._id} id={recipe._id} className='text-start mb-2 whitespace-nowrap'>
-                                    <button className="p-1 mr-2 rounded-lg bg-red-800" onClick={(e) => addToBook(e, recipe)}>+</button>
+                                <li key={recipe._id} id={recipe._id} className='text-start mb-2 whitespace-nowrap flex items-center gap-2'>
+                                    <button
+                                        aria-label={`Add ${recipe.title} to cookbook`}
+                                        className="p-2 min-w-[2rem] min-h-[2rem] rounded-lg bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center"
+                                        onClick={(e) => addToBook(e, recipe)}
+                                    >+</button>
                                     {recipe.title}
                                 </li>
                             ))}
                         </ul>
                     </div>
                     <div className="h-full w-full overflow-y-auto pr-4 text-center">
-                        <h2 className="text-2xl font-bold mb-4">Cookbook</h2>
+                        <h2 className="text-2xl font-bold mb-4 text-red-400">In this Cookbook</h2>
                         <ul className="inline-block max-width-content items-center">
                             {recipes.map((recipe) => (
-                                <li key={recipe._id} className="text-start mb-2 whitespace-nowrap">
-                                    <button className="p-1 mr-2 rounded-lg bg-red-800" onClick={(e) => removeFromBook(e, recipe)}>-</button>
+                                <li key={recipe._id} className="text-start mb-2 whitespace-nowrap flex items-center gap-2">
+                                    <button
+                                        aria-label={`Remove ${recipe.title} from cookbook`}
+                                        className="p-2 min-w-[2rem] min-h-[2rem] rounded-lg bg-red-700 hover:bg-red-600 text-white flex items-center justify-center"
+                                        onClick={(e) => removeFromBook(e, recipe)}
+                                    >-</button>
                                     {recipe.title}
                                 </li>
                             ))}
                         </ul>
-                        {errors.recipes && <p className="text-red-500">{errors.recipes}</p>}
+                        {errors.recipes && <p role="alert" className="text-red-400 text-sm mt-2">{errors.recipes}</p>}
                     </div>
                 </div>
             </div>

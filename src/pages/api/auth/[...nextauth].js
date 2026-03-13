@@ -2,6 +2,7 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import clientPromise from "../../../../lib/mongodb";
+import bcrypt from "bcrypt";
 
 // define the authentication options
 const options = {
@@ -30,8 +31,9 @@ const options = {
                         return null; // user not found, return null
                     }
 
-                    // compare the password with the hashed password stored in the database
-                    if (credentials.password != userData.password) {
+                    // compare the submitted password against the stored bcrypt hash
+                    const passwordMatch = await bcrypt.compare(credentials.password, userData.password);
+                    if (!passwordMatch) {
                         return null; // password doesn't match, return null
                     }
 
@@ -51,7 +53,7 @@ const options = {
     ],
     callbacks: {
         // run when the user signs in
-        async signIn({ user, account, profile, email, credentials }) {
+        async signIn({ user, account }) {
             try {
                 const MongoClient = await clientPromise;
                 const db = MongoClient.db('CBD');
@@ -59,14 +61,27 @@ const options = {
 
                 // find the user by email
                 const userData = await collection.findOne({ email: user.email.toLowerCase() });
+
                 if (userData === null) {
-                    return false; // user not found, return false
+                    // For Google OAuth, auto-create the account on first sign-in.
+                    // Credentials users must register explicitly via /signup.
+                    if (account.provider === 'google') {
+                        await collection.insertOne({
+                            username: user.name,
+                            email: user.email.toLowerCase(),
+                            password: null,
+                            cookbooks: { allRecipes: [], myBooks: [] }
+                        });
+                        return true;
+                    }
+                    return false;
                 }
 
                 // user found, return true
                 return true;
             } catch (e) {
                 console.log(e);
+                return false;
             }
         },
         // run when the user's session is created

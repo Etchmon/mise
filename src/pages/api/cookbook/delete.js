@@ -15,14 +15,23 @@ export default async function deleteCookbook(req, res) {
         return;
     }
 
-    const session = getSession({ req });
+    const session = await getSession({ req });
     if (!session) {
         res.status(401).json({ message: 'Not Authenticated' });
         return;
     }
 
     const { id } = JSON.parse(req.body);
-    console.log(id);
+
+    if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid cookbook ID' });
+    }
+
+    // Ownership check — only the cookbook's owner may delete it
+    const ownedIds = (session.user.cookbooks?.myBooks || []).map(String);
+    if (!ownedIds.includes(id)) {
+        return res.status(403).json({ message: 'Forbidden' });
+    }
 
     try {
         const client = await clientPromise;
@@ -31,7 +40,7 @@ export default async function deleteCookbook(req, res) {
 
         // Delete the cookbook in the database
         const result = await collection.findOneAndDelete(
-            { _id: ObjectId(id) }
+            { _id: new ObjectId(id) }
         );
 
         if (result.modifiedCount === 0) {

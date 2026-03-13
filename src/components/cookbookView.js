@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import Image from 'next/image';
-import imgSrc from '../../public/images/book.jpg';
 import Loading from '../components/loading';
-
+import { useRouter } from 'next/router';
 
 const CookbookView = (props) => {
     const [recipes, setRecipes] = useState(null);
     const { cookbook, setActiveRecipe, setActiveComponent } = props;
-    const [imageLoaded, setImageLoaded] = useState(false);
+    const router = useRouter();
 
-    const handleImageLoad = () => {
-        setImageLoaded(true);
+    const handleBack = () => {
+        if (setActiveComponent) {
+            setActiveComponent('cookbooks');
+        } else {
+            router.back();
+        }
     };
 
     const handleClick = (recipe) => {
@@ -20,13 +22,11 @@ const CookbookView = (props) => {
 
     useEffect(() => {
         const fetchCookBookRecipes = async () => {
-            const cookbookId = cookbook._id; // Replace with your actual cookbook ID
+            const cookbookId = cookbook._id;
             const response = await fetch(`/api/recipe/getCookbookRecipes?cookbookId=${cookbookId}`);
             const data = await response.json();
-            const filterData = data.filter(item => item !== null)
-            setRecipes(filterData);
+            setRecipes(data.filter(item => item !== null));
         };
-
         fetchCookBookRecipes();
     }, []);
 
@@ -35,39 +35,36 @@ const CookbookView = (props) => {
     }
 
     return (
-        <div className={`relative bg-gray-900 h-full md:mr-10 row-span-6 ${imageLoaded ? 'opacity-100 transition-opacity duration-500 ease-in-out' : 'opacity-0'
-            }`}>
-            <div className="absolute inset-0 w-full h-full overflow-hidden rounded-md">
-                <Image
-                    src={imgSrc}
-                    alt="Background Image"
-                    onLoadingComplete={handleImageLoad}
-                    quality={100} // Adjust image quality if needed
-                    className="object-cover object-center w-full h-full filter blur-md"
-                />
-                <div className="absolute inset-0 bg-gray-900 opacity-50"></div>
-            </div>
-            <div className="relative container mx-auto px-4 py-6 z-10">
-                <h1 className="text-4xl font-bold mb-4 md:mt-20 text-green-500 text-center">{cookbook.title}</h1>
-                <div className="grid grid-cols-1 gap-4 mb-auto flex-1 h-full overflow-y-auto pb-40">
-                    {recipes.map((recipe) => (
-                        <div
-                            key={recipe.recipeId}
-                            className="bg-gray-100 p-4 rounded-lg shadow hover:bg-green-300 cursor-pointer w-full"
-                            onClick={() => handleClick(recipe)}
-                        >
-                            <div className="grid grid-cols-1 gap-4">
-                                <div className='flex justify-between'>
-                                    <h2 className="text-green-800 font-semibold mb-2">{recipe.title}</h2>
-                                    <p className="text-green-800">{recipe.description}</p>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+        <div className="h-full overflow-y-auto pb-4">
+            <button
+                onClick={handleBack}
+                className="text-stone-500 hover:text-stone-100 text-sm flex items-center gap-1 mb-6 transition-colors"
+                aria-label="Go back"
+            >
+                &#8592; Back
+            </button>
+            <h1 className="text-3xl font-bold mb-1 text-rose-400">{cookbook.title}</h1>
+            {cookbook.description && (
+                <p className="text-stone-400 text-sm mb-6">{cookbook.description}</p>
+            )}
+            <div className="flex flex-col gap-2">
+                {recipes.length === 0 && (
+                    <p className="text-stone-500 text-sm">No recipes in this cookbook yet.</p>
+                )}
+                {recipes.map((recipe) => (
+                    <button
+                        key={recipe.recipeId ?? recipe._id}
+                        className="bg-stone-900 border border-stone-800 rounded-lg px-4 py-3 text-left hover:border-stone-600 transition-colors w-full"
+                        onClick={() => handleClick(recipe)}
+                    >
+                        <p className="text-stone-100 font-medium text-sm">{recipe.title}</p>
+                        {recipe.description && (
+                            <p className="text-stone-500 text-xs mt-0.5 truncate">{recipe.description}</p>
+                        )}
+                    </button>
+                ))}
             </div>
         </div>
-
     );
 };
 
