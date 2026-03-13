@@ -112,8 +112,8 @@ const Dashboard = () => {
     return (
         <div className="grid grid-cols-1 grid-rows-6 lg:grid-cols-6 h-screen w-full bg-stone-950 text-stone-200">
             <Head>
-                <title>CookBook Digital</title>
-                <meta name="description" content="Organize your recipes and plan your dinners with CookBook Digital." />
+                <title>Mise</title>
+                <meta name="description" content="Mise — save recipes, build cookbooks, and discover new dishes." />
             </Head>
             {/* Sidebar */}
             <nav aria-label="Main navigation" className="bg-stone-950 border-b lg:border-b-0 lg:border-r border-stone-800 lg:top-0 grid-row-1 lg:grid-col-1 lg:row-span-6 pb-4">

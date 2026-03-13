@@ -13,8 +13,8 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col">
       <Head>
-        <title>CookBook Digital</title>
-        <meta name="description" content="Organize your recipes and plan your dinners with CookBook Digital." />
+        <title>Mise</title>
+        <meta name="description" content="Mise — save recipes, build cookbooks, and discover new dishes." />
       </Head>
       <Navbar />
 

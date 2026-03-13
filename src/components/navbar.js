@@ -6,7 +6,7 @@ const Navbar = () => {
 
     return (
         <nav className="fixed top-0 bg-stone-950 border-b border-stone-800 py-3 px-4 md:px-8 flex justify-between items-center w-full z-20">
-            <Link href="/" className='text-stone-100 font-semibold tracking-tight'>CookBook Digital</Link>
+            <Link href="/" className='text-stone-100 font-semibold tracking-tight'>Mise</Link>
             {!session ? (
                 <div className="flex items-center gap-4">
                     <Link href="/login" className="text-stone-400 hover:text-stone-100 text-sm transition-colors">
