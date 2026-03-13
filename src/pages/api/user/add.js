@@ -35,16 +35,17 @@ export default async function addUser(req, res) {
                 cookbooks: { allRecipes: [], myBooks: [] }
             };
 
-            const result = await collection.insertOne(user);
+            await collection.insertOne(user);
 
-            return res.json({ msg: 'user created ', user });
+            // Never return the password (even hashed) to the client
+            return res.status(201).json({ msg: 'User created' });
 
         } catch (e) {
             console.log(e);
             return res.status(500).json({ error: 'Failed to insert user into database' });
         }
     } else {
-        return res.json('NOT A POST METHOD');
+        return res.status(405).json({ message: 'Method Not Allowed' });
     }
 
 }

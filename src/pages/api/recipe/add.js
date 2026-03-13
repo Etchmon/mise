@@ -10,7 +10,8 @@ export default async function addRecipe(req, res) {
 
     if (req.method === 'POST') {
         try {
-            const { title, description, ingredients, instructions, author } = req.body;
+            const { title, description, ingredients, instructions } = req.body;
+            const author = session.user.username; // always use authenticated identity, never trust client-supplied author
 
             const client = await clientPromise;
             const db = await client.db("CBD");
