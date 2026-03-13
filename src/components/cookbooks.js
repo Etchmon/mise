@@ -1,90 +1,73 @@
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
-import Image from 'next/image';
-import imgSrc from '../../public/images/book.jpg';
+import React from 'react';
 
 const CookbookList = (props) => {
-    const router = useRouter();
     const { cookbooks, setActiveCookbook, setActiveComponent } = props;
-    const [imageLoaded, setImageLoaded] = useState(false);
-
-    const handleImageLoad = () => {
-        setImageLoaded(true);
-    };
 
     const handleView = (cookbook) => {
         setActiveCookbook(cookbook);
-        setActiveComponent('cookbookView')
-
+        setActiveComponent('cookbookView');
     };
 
     const handleEdit = (cookbook) => {
         setActiveCookbook(cookbook);
-        setActiveComponent('cookbookEdit')
+        setActiveComponent('cookbookEdit');
     };
 
     const handleDelete = async (cookbookId) => {
+        if (!window.confirm('Are you sure you want to delete this cookbook?')) return;
         const res = await fetch('/api/cookbook/delete', {
             method: 'DELETE',
             header: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                id: cookbookId
-            }),
+            body: JSON.stringify({ id: cookbookId }),
         });
-
-        const result = res.json();
+        await res.json();
         props.updateData();
+    };
+
+    if (cookbooks.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center h-full text-stone-500 gap-2">
+                <p className="text-lg">You have no cookbooks yet.</p>
+                <p className="text-sm">Create a cookbook to organise your recipes into collections.</p>
+            </div>
+        );
     }
 
     return (
-        <div className={`h-screen relative lg:flex lg:justify-between items-center bg-gray-900 lg:m-10 shadow-md rounded-lg pb-4 text-white ${imageLoaded ? 'opacity-100 transition-opacity duration-500 ease-in-out' : 'opacity-0'
-            } `}>
-            <div className="grid grid-cols-1 pb-4 lg:grid-cols-3 grid-auto-rows gap-4 flex-1 h-full w-full z-10">
-                {cookbooks.map((cookbook) => (
-                    <div
-                        key={cookbook._id}
-                        className="relative bg-gray-100 p-4 rounded-lg shadow flex flex-col justify-evenly"
-                    >
-                        <div className="absolute inset-0 w-full h-full overflow-hidden rounded-md">
-                            <Image
-                                src={imgSrc}
-                                alt="Background Image"
-                                onLoadingComplete={handleImageLoad}
-                                quality={100} // Adjust image quality if needed
-                                className="object-cover object-center w-full h-full filter blur-md"
-                            />
-                        </div>
-                        <div className="grid grid-cols-1 gap-4 text-center z-10">
-                            <div>
-                                <h2 className="text-4xl text-green-800 font-semibold mb-2">{cookbook.title}</h2>
-                                <p className="text-green-800">{cookbook.description}</p>
-                            </div>
-                        </div>
-                        <div className='flex justify-evenly gap-2 z-10'>
-                            <button
-                                className="bg-blue-500 text-white py-2 px-4 rounded-lg mt-4 hover:bg-blue-600 transition-colors duration-300"
-                                onClick={() => handleView(cookbook)}
-                            >
-                                View
-                            </button>
-                            <button
-                                className="bg-green-500 text-white py-2 px-4 rounded-lg mt-4 hover:bg-green-600 transition-colors duration-300"
-                                onClick={() => handleEdit(cookbook)}
-                            >
-                                Edit
-                            </button>
-                            <button
-                                className="bg-red-500 text-white py-2 px-4 rounded-lg mt-4 hover:bg-red-600 transition-colors duration-300"
-                                onClick={() => handleDelete(cookbook._id)}
-                            >
-                                Delete
-                            </button>
-                        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 content-start pb-4">
+            {cookbooks.map((cookbook) => (
+                <div
+                    key={cookbook._id}
+                    className="bg-stone-900 border border-stone-800 rounded-lg p-5 flex flex-col gap-3 hover:border-stone-600 transition-colors"
+                >
+                    <div>
+                        <h2 className="text-lg font-semibold text-stone-100 mb-1">{cookbook.title}</h2>
+                        <p className="text-stone-400 text-sm">{cookbook.description}</p>
                     </div>
-                ))}
-            </div>
+                    <div className="flex gap-2 mt-auto pt-2 border-t border-stone-800">
+                        <button
+                            className="bg-rose-600 text-white py-1.5 px-3 rounded hover:bg-rose-500 text-sm font-medium transition-colors"
+                            onClick={() => handleView(cookbook)}
+                        >
+                            View
+                        </button>
+                        <button
+                            className="bg-stone-800 text-stone-300 py-1.5 px-3 rounded hover:bg-stone-700 text-sm transition-colors"
+                            onClick={() => handleEdit(cookbook)}
+                        >
+                            Edit
+                        </button>
+                        <button
+                            className="bg-stone-800 text-stone-300 py-1.5 px-3 rounded hover:bg-red-700 hover:text-white text-sm transition-colors ml-auto"
+                            onClick={() => handleDelete(cookbook._id)}
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 };

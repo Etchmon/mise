@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head'
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { signOut, getSession, useSession } from "next-auth/react";
 import Dash from '../components/dash';
 import RecipeList from '../components/recipes';
@@ -13,8 +14,14 @@ import CookbookView from '../components/cookbookView'
 import CookbookEdit from '../components/cookbookEdit';
 import Loading from '../components/loading';
 
+// Views that can be restored from the URL on page load.
+// Detail views (recipeView, cookbookView, cookbookEdit) require an active object
+// that can't be encoded in the URL, so they are excluded.
+const RESTORABLE_VIEWS = new Set(['dashboard', 'stream', 'recipes', 'cookbooks', 'recipeAdd', 'cookbookAdd']);
+
 const Dashboard = () => {
     const { data: session, status } = useSession();
+    const router = useRouter();
     const [activeComponent, setActiveComponent] = useState('dashboard');
     const [recipesFull, setRecipesFull] = useState([]);
     const [cookbooksFull, setCookbooksFull] = useState([]);
@@ -22,7 +29,6 @@ const Dashboard = () => {
     const [activeRecipe, setActiveRecipe] = useState(null);
     const [activeCookbook, setActiveCookbook] = useState(null);
 
-    // Function to shuffle an array
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -31,14 +37,12 @@ const Dashboard = () => {
         return array;
     }
 
-    // Fetch user recipes
     const fetchUserRecipes = async () => {
         const response = await fetch('/api/recipe/getUserRecipes');
         const data = await response.json();
         setRecipesFull(data);
     };
 
-    // Fetch user recipes
     const fetchUserCookbooks = async () => {
         const response = await fetch('/api/cookbook/getUserCookbooks');
         const data = await response.json();
@@ -51,7 +55,6 @@ const Dashboard = () => {
         setStreamRecipes(shuffleArray(data));
     };
 
-    // Fetch user data from API endpoints
     const fetchData = async () => {
         await Promise.all([
             fetchStreamRecipes(),
@@ -60,119 +63,127 @@ const Dashboard = () => {
         ]);
     };
 
-
+    // Restore view from URL on mount, then fetch data.
     useEffect(() => {
-        // Fetch user data on component mount
+        const view = router.query.view;
+        if (view && RESTORABLE_VIEWS.has(view)) {
+            setActiveComponent(view);
+        }
         fetchData();
     }, []);
 
-    // Render the appropriate component based on activeComponent state
+    // Navigate to a view and sync the URL (shallow — no server round-trip).
+    const navigateTo = (view) => {
+        setActiveComponent(view);
+        if (RESTORABLE_VIEWS.has(view)) {
+            router.push({ pathname: '/dashboard', query: { view } }, undefined, { shallow: true });
+        }
+    };
+
     const renderComponent = () => {
         switch (activeComponent) {
             case 'recipeView':
-                return <RecipeView recipeObj={activeRecipe} />
+                return <RecipeView recipeObj={activeRecipe} setActiveComponent={navigateTo} />
             case 'cookbookView':
-                return <CookbookView cookbook={activeCookbook} setActiveComponent={setActiveComponent} setActiveRecipe={setActiveRecipe} />
+                return <CookbookView cookbook={activeCookbook} setActiveComponent={navigateTo} setActiveRecipe={setActiveRecipe} />
             case 'cookbookEdit':
                 return <CookbookEdit cookbook={activeCookbook} myRecipes={recipesFull} />
             case 'recipeAdd':
-                return <RecipeForm setActiveComponent={setActiveComponent} updateData={fetchData} />
+                return <RecipeForm setActiveComponent={navigateTo} updateData={fetchUserRecipes} />
             case 'cookbookAdd':
-                return <CookbookForm setActiveComponent={setActiveComponent} updateData={fetchUserCookbooks} />
+                return <CookbookForm setActiveComponent={navigateTo} updateData={fetchUserCookbooks} />
             case 'dashboard':
-                return <Dash session={session} recipes={recipesFull} cookbooks={cookbooksFull} onClick={setActiveComponent} />;
+                return <Dash session={session} recipes={recipesFull} cookbooks={cookbooksFull} onClick={navigateTo} />;
             case 'stream':
-                return <Stream recipes={streamRecipes} showAddButton={true} updateData={fetchUserRecipes} setActiveComponent={setActiveComponent} setActiveRecipe={setActiveRecipe} />;
+                return <Stream recipes={streamRecipes} showAddButton={true} updateData={fetchUserRecipes} setActiveComponent={navigateTo} setActiveRecipe={setActiveRecipe} />;
             case 'recipes':
-                return <RecipeList recipes={recipesFull} showAddButton={false} setActiveComponent={setActiveComponent} setActiveRecipe={setActiveRecipe} updateData={fetchData} />;
+                return <RecipeList recipes={recipesFull} showAddButton={false} setActiveComponent={navigateTo} setActiveRecipe={setActiveRecipe} updateData={fetchUserRecipes} />;
             case 'cookbooks':
-                return <CookbooksList cookbooks={cookbooksFull} updateData={fetchUserCookbooks} setActiveCookbook={setActiveCookbook} setActiveComponent={setActiveComponent} />;
+                return <CookbooksList cookbooks={cookbooksFull} updateData={fetchUserCookbooks} setActiveCookbook={setActiveCookbook} setActiveComponent={navigateTo} />;
             default:
                 return null;
         }
-    }
+    };
 
     if (!session) {
         return <Loading />;
     }
 
     return (
-        <div className="grid grid-cols-1 grid-rows-6 lg:grid-cols-6 h-screen w-full bg-gray-900 text-gray-300">
+        <div className="grid grid-cols-1 grid-rows-6 lg:grid-cols-6 h-screen w-full bg-stone-950 text-stone-200">
             <Head>
-                <title>CBD</title>
+                <title>CookBook Digital</title>
                 <meta name="description" content="Organize your recipes and plan your dinners with CookBook Digital." />
             </Head>
             {/* Sidebar */}
-            <div className="bg-gray-900 lg:top-0 grid-row-1 lg:grid-col-1 lg:row-span-6 pb-4">
-                <Link href="/" className="flex justify-center text-lg text-green-500 font-semibold pt-4 lg:p-4 lg:justify-start">Menu</Link>
+            <nav aria-label="Main navigation" className="bg-stone-950 border-b lg:border-b-0 lg:border-r border-stone-800 lg:top-0 grid-row-1 lg:grid-col-1 lg:row-span-6 pb-4">
+                <Link href="/" className="flex justify-center text-lg text-rose-400 font-semibold pt-4 lg:p-4 lg:justify-start">Menu</Link>
                 <ul className="mt-2 lg:p-4 space-y-2 flex flex-wrap justify-evenly lg:flex-col">
                     <li>
                         <button
-                            className={`text-green-300 block py-2 px-4 mt-2 lg:mt-0 hover:bg-green-600 hover:text-gray-100 rounded lg:w-3/4 text-left ${activeComponent === 'dashboard' ? 'bg-green-600 text-gray-100' : ''}`}
-                            onClick={() => setActiveComponent('dashboard')}
+                            aria-current={activeComponent === 'dashboard' ? 'page' : undefined}
+                            className={`text-stone-300 block py-2 px-4 mt-2 lg:mt-0 hover:bg-rose-700 hover:text-white rounded lg:w-3/4 text-left ${activeComponent === 'dashboard' ? 'bg-rose-700 text-white' : ''}`}
+                            onClick={() => navigateTo('dashboard')}
                         >
                             Dashboard
                         </button>
                     </li>
                     <li>
                         <button
-                            className={`text-green-300 block py-2 px-4 hover:bg-green-600 hover:text-gray-100 rounded lg:w-3/4 text-left ${activeComponent === 'stream' ? 'bg-green-600 text-gray-100' : ''}`}
-                            onClick={() => setActiveComponent('stream')}
+                            aria-current={activeComponent === 'stream' ? 'page' : undefined}
+                            className={`text-stone-300 block py-2 px-4 hover:bg-rose-700 hover:text-white rounded lg:w-3/4 text-left ${activeComponent === 'stream' ? 'bg-rose-700 text-white' : ''}`}
+                            onClick={() => navigateTo('stream')}
                         >
                             Stream
                         </button>
                     </li>
                     <li>
                         <button
-                            className={`text-green-300 block py-2 px-4 hover:bg-green-600 hover:text-gray-100 rounded lg:w-3/4 text-left ${activeComponent === 'recipes' ? 'bg-green-600 text-gray-100' : ''}`}
-                            onClick={() => setActiveComponent('recipes')}
+                            aria-current={activeComponent === 'recipes' ? 'page' : undefined}
+                            className={`text-stone-300 block py-2 px-4 hover:bg-rose-700 hover:text-white rounded lg:w-3/4 text-left ${activeComponent === 'recipes' ? 'bg-rose-700 text-white' : ''}`}
+                            onClick={() => navigateTo('recipes')}
                         >
                             Recipes
                         </button>
                     </li>
                     <li>
                         <button
-                            className={`text-green-300 block py-2 px-4 hover:bg-green-600 hover:text-gray-100 rounded lg:w-3/4 text-left ${activeComponent === 'cookbooks' ? 'bg-green-600 text-gray-100' : ''}`}
-                            onClick={() => setActiveComponent('cookbooks')}
+                            aria-current={activeComponent === 'cookbooks' ? 'page' : undefined}
+                            className={`text-stone-300 block py-2 px-4 hover:bg-rose-700 hover:text-white rounded lg:w-3/4 text-left ${activeComponent === 'cookbooks' ? 'bg-rose-700 text-white' : ''}`}
+                            onClick={() => navigateTo('cookbooks')}
                         >
-                            CookBooks
+                            Cookbooks
                         </button>
                     </li>
                     <li>
-                        <Link href="/" onClick={() => signOut()} className="text-green-300 block py-2 px-4 hover:bg-green-600 hover:text-gray-100 rounded lg:w-3/4">
+                        <Link href="/" onClick={() => signOut()} className="text-stone-300 block py-2 px-4 hover:bg-rose-700 hover:text-white rounded lg:w-3/4">
                             Sign Out
                         </Link>
                     </li>
                 </ul>
-            </div>
+            </nav>
             {/* Content */}
-            <div className="h-full w-full mx-auto pb-4 lg:col-span-4 row-start-3 lg:py-10 row-span-6 lg:row-span-6 container px-4 lg:py-6 overflow-y-scroll lg:overflow-hidden ">
+            <main id="main-content" className="h-full w-full mx-auto pb-4 lg:col-span-4 row-start-3 lg:py-10 row-span-6 lg:row-span-6 container px-4 lg:py-6 overflow-y-scroll lg:overflow-hidden">
                 {renderComponent()}
-            </div>
+            </main>
         </div>
-
-
-
     );
-}
+};
 
 export default Dashboard;
 
-// Server-side function to get the current session
 export const getServerSideProps = async (context) => {
     const session = await getSession(context);
 
-    // If no session is, redirect to the homepage
     if (!session) {
         return {
             redirect: {
                 destination: '/'
             }
-        }
+        };
     }
 
-    // Otherwise, return the session as props
     return {
         props: { ...session }
-    }
-}
+    };
+};

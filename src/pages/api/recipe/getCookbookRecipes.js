@@ -1,7 +1,6 @@
 import clientPromise from '../../../../lib/mongodb';
-import Cookbook from '../../../../models/cookbookModel';
 import { getSession } from "next-auth/react";
-import { ObjectID } from 'bson';
+import { ObjectId } from 'mongodb';
 
 
 /**
@@ -10,24 +9,30 @@ import { ObjectID } from 'bson';
  */
 
 export default async function cookbookRecipes(req, res) {
+    const session = await getSession({ req });
+    if (!session) {
+        return res.status(401).json({ message: 'Not Authenticated' });
+    }
+
     if (req.method === 'GET') {
+        const cookbookId = req.query.cookbookId;
+
+        if (!ObjectId.isValid(cookbookId)) {
+            return res.status(400).json({ message: 'Invalid cookbook ID' });
+        }
+
         try {
             const MongoClient = await clientPromise;
             const db = await MongoClient.db("CBD");
             const collection = await db.collection("Cookbooks");
             const recipeCollection = await db.collection("Recipes");
 
-            const cookbookId = req.query.cookbookId;
-            const cookbook = await collection.findOne({ _id: ObjectID(cookbookId) });
+            const cookbook = await collection.findOne({ _id: new ObjectId(cookbookId) });
 
-            const uniqueRecipeIds = [...new Set(cookbook.recipes)];
-            const recipeIds = uniqueRecipeIds.map(ObjectID);
-
-            const recipeQueries = recipeIds.map((recipeId) => (
-                recipeCollection.findOne({ _id: recipeId })
-            ));
-
-            const recipes = await Promise.all(recipeQueries);
+            // Deduplicate IDs and fetch all recipes in a single $in query
+            const uniqueRecipeIds = [...new Set(cookbook.recipes.map(String))];
+            const objectIds = uniqueRecipeIds.map((id) => new ObjectId(id));
+            const recipes = await recipeCollection.find({ _id: { $in: objectIds } }).toArray();
 
             res.status(200).json(recipes);
         } catch (error) {

@@ -16,7 +16,12 @@ export default async function allRecipes(req, res) {
             const MongoClient = await clientPromise;
             const db = await MongoClient.db("CBD");
             const collection = await db.collection("Recipes");
-            const results = await collection.find({}).toArray();
+            // Limit results and exclude the instructions field — it's large and not needed for list views.
+            // The stream is shuffled client-side, so a rotating sample of 50 is sufficient.
+            const results = await collection
+                .find({}, { projection: { title: 1, description: 1, ingredients: 1, author: 1 } })
+                .limit(50)
+                .toArray();
             res.status(200).json(results);
         } catch (e) {
             console.log(e);

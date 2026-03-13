@@ -1,41 +1,48 @@
 import clientPromise from '../../../../lib/mongodb';
-import Comment from '../../../../models/commentModel';
-
+import { getSession } from "next-auth/react";
+import { ObjectId } from 'mongodb';
 
 /**
- * @param {import('next').NextApiRequest} req 
- * @param {import('next').NextApiResponse} res 
+ * @param {import('next').NextApiRequest} req
+ * @param {import('next').NextApiResponse} res
  */
 
 export default async function addComment(req, res) {
-
+    const session = await getSession({ req });
+    if (!session) {
+        return res.status(401).json({ message: 'Not Authenticated' });
+    }
 
     if (req.method === 'POST') {
         try {
-            // Get collection info from Database
             const MongoClient = await clientPromise;
             const db = await MongoClient.db("CBD");
             const commentCollection = await db.collection("Comments");
-            const recipe = await db.collection("Recipes").findOne({ _id: req.body.recipeId });
+            const recipeCollection = db.collection("Recipes");
 
-            // Create new comment model
-            const comment = new Comment({
+            const comment = {
+                _id: new ObjectId(),
                 text: req.body.text,
-                author: req.body.author
-            });
+                author: session.user.username, // always use authenticated identity, never trust client-supplied author
+                date: new Date()
+            };
 
-            // Add comment to comment collection and comment id to the recipes comments array
+            // Insert comment into Comments collection
             const result = await commentCollection.insertOne(comment);
-            const recipeUpdate = recipe.comments.push(comment.id);
 
-            console.log([result, recipeUpdate])
+            // Update the recipe document in the database to include this comment's ID.
+            // $push appends to the array field in MongoDB — the JS object above is not the DB document.
+            await recipeCollection.updateOne(
+                { _id: new ObjectId(req.body.recipeId) },
+                { $push: { comments: result.insertedId } }
+            );
 
-            // Return success
-            return res.json({ msg: 'comment created ', comment });
+            return res.json({ msg: 'comment created', comment });
         } catch (e) {
             console.log(e);
+            return res.status(500).json({ message: 'Something went wrong' });
         }
     } else {
-        return res.json('NOT A POST METHOD');
+        return res.status(405).json({ message: 'Method Not Allowed' });
     }
 }

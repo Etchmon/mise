@@ -25,16 +25,18 @@ export default async function deleteRecipe(req, res) {
         const db = await client.db("CBD");
         const collection = await db.collection("Recipes");
 
-        // Delete the recipe in the database
-        const result = await collection.findOneAndDelete(
-            { _id: ObjectId(id) }
-        );
-
-        if (result.modifiedCount === 0) {
-            //  If no matching recipe found, return not found status
-            res.status(404).json({ message: 'Recipe not found' });
-            return;
+        // Fetch the recipe first to verify ownership before deleting
+        const recipe = await collection.findOne({ _id: new ObjectId(id) });
+        if (!recipe) {
+            return res.status(404).json({ message: 'Recipe not found' });
         }
+
+        // Only the recipe's author may delete it
+        if (recipe.author !== session.user.username) {
+            return res.status(403).json({ message: 'Forbidden' });
+        }
+
+        await collection.deleteOne({ _id: new ObjectId(id) });
 
         res.status(200).json({ message: 'Recipe deleted successfully' });
     } catch (error) {

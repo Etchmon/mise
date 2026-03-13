@@ -18,8 +18,6 @@ const RecipeForm = (props) => {
         setLoad(true);
     }, [])
 
-    let id = 0;
-
     const [value, setValue] = useState({
         title: '',
         description: '',
@@ -134,8 +132,7 @@ const RecipeForm = (props) => {
                 author: session.user.username
             }),
         });
-        const result = await res.json();
-        console.log(result);
+        await res.json();
         updateData();
         setActiveComponent('recipes');
     }
@@ -156,96 +153,115 @@ const RecipeForm = (props) => {
     } else {
 
         return (
-            <div className={`bg-gray-900 h-full mx-auto text-gray-300 grid grid-cols-1 lg:mt-10 lg:grid-cols-2 ${load ? 'opacity-100 transition-opacity duration-500 ease-in-out' : 'opacity-0'
+            <div className={`bg-stone-950 h-full mx-auto text-stone-200 grid grid-cols-1 lg:mt-10 lg:grid-cols-2 ${load ? 'opacity-100 transition-opacity duration-500 ease-in-out' : 'opacity-0'
                 }`}>
-                <form className="flex flex-col w-full max-w-md p-4 items-start justify-center">
-                    <h1 className="text-2xl font-bold w-full mb-4 text-center">Create a Recipe</h1>
+                <form className="flex flex-col w-full max-w-md p-4 items-start justify-center" noValidate>
+                    <h1 className="text-2xl font-bold w-full mb-4 text-center text-red-400">Create a Recipe</h1>
                     <label className="w-full flex flex-col mb-4">
                         <span className="mb-2 font-medium">Recipe name:</span>
                         <input
-                            className="w-full py-2 rounded-md bg-gray-700 focus:outline-none focus:ring-2 focus:ring-green-600"
+                            className="w-full py-2 px-3 rounded-md bg-stone-800 border border-stone-600 text-stone-100"
                             type="text"
                             name="title"
                             value={value.title}
+                            aria-required="true"
+                            aria-invalid={!!errors.title}
+                            aria-describedby={errors.title ? "title-error" : undefined}
                             onChange={handleChange}
                         />
-                        {errors.title && <span className="text-red-500">{errors.title}</span>}
+                        {errors.title && <span id="title-error" role="alert" className="text-red-400 text-sm mt-1">{errors.title}</span>}
                     </label>
                     <label className="w-full flex flex-col mb-4">
                         <span className="mb-2 font-medium">Description:</span>
-                        <textarea name="description" className="w-full rounded-md bg-gray-700 focus:outline-none focus:ring-2 focus:ring-green-600" value={value.description} onChange={handleChange} />
-                        {errors.description && <p className="text-red-500">{errors.description}</p>}
+                        <textarea
+                            name="description"
+                            className="w-full rounded-md bg-stone-800 border border-stone-600 text-stone-100 px-3 py-2"
+                            value={value.description}
+                            aria-required="true"
+                            aria-invalid={!!errors.description}
+                            aria-describedby={errors.description ? "description-error" : undefined}
+                            onChange={handleChange}
+                        />
+                        {errors.description && <span id="description-error" role="alert" className="text-red-400 text-sm mt-1">{errors.description}</span>}
                     </label>
                     <label className="w-full flex flex-col mb-4">
                         <span className="mb-2 font-medium">Ingredients:</span>
                         <div className="flex flex-col md:flex w-full">
                             <input
-                                className="py-2 px-3 rounded-t-md bg-gray-700 focus:outline-none focus:ring-2 focus:ring-green-600"
+                                className="py-2 px-3 rounded-t-md bg-stone-800 border border-stone-600 text-stone-100"
                                 type="text"
                                 name="ingredients"
                                 value={value.ingredients}
                                 onChange={handleChange}
                             />
                             <button
-                                className="py-2 px-4 rounded-b-md bg-blue-600 hover:bg-blue-700 text-gray-300 font-medium"
+                                className="py-2 px-4 rounded-b-md bg-rose-600 hover:bg-rose-500 text-white font-medium"
                                 onClick={addIngredient}
                             >
-                                Add
+                                Add ingredient
                             </button>
                         </div>
-                        {errors.ingredients && <span className="text-red-500">{errors.ingredients}</span>}
+                        {errors.ingredients && <span role="alert" className="text-red-400 text-sm mt-1">{errors.ingredients}</span>}
                     </label>
                     <label className="w-full flex flex-col mb-4">
                         <span className="mb-2 font-medium">Instructions:</span>
                         <div className="flex flex-col md:flex">
                             <input
-                                className="py-2 px-3 rounded-t-md bg-gray-700 focus:outline-none focus:ring-2 focus:ring-green-600"
+                                className="py-2 px-3 rounded-t-md bg-stone-800 border border-stone-600 text-stone-100"
                                 type="text"
                                 name="instructions"
                                 value={value.instructions}
                                 onChange={handleChange}
                             />
                             <button
-                                className="py-2 px-4 rounded-b-md bg-blue-600 hover:bg-blue-700 text-gray-300 font-medium"
+                                className="py-2 px-4 rounded-b-md bg-rose-600 hover:bg-rose-500 text-white font-medium"
                                 onClick={addInstruction}
                             >
-                                Add
+                                Add instruction
                             </button>
                         </div>
-                        {errors.instructions && <span className="text-red-500">{errors.instructions}</span>}
+                        {errors.instructions && <span role="alert" className="text-red-400 text-sm mt-1">{errors.instructions}</span>}
                     </label>
                     <button
-                        className="w-full mt-10 py-6 px-4 rounded-md bg-green-600 hover:bg-green-700 text-gray-300 font-medium"
+                        className="w-full mt-10 py-4 px-4 rounded-md bg-rose-600 hover:bg-rose-500 text-white font-semibold"
                         onClick={handleSubmit}
                     >
-                        Submit
+                        Save Recipe
                     </button>
                 </form>
                 <div className="w-full max-h-screen grid gap-10 lg:grid-rows-2 p-4 lg:overflow-hidden">
                     <div className="w-full max-h-screen-1/2 overflow-y-scroll">
-                        <h2 className="text-xl font-medium sticky top-0 bg-gray-900">Ingredients</h2>
+                        <h2 className="text-xl font-medium sticky top-0 bg-stone-950 text-red-400 pb-2">Ingredients</h2>
                         <ol className="mt-4">
-                            {ingredients.map((ingredient) => (
+                            {ingredients.map((ingredient, index) => (
                                 <li
-                                    key={id++}
-                                    className="py-2 px-3 mb-2 bg-gray-700 rounded-md text-gray-300 flex justify-between"
+                                    key={index}
+                                    className="py-2 px-3 mb-2 bg-stone-800 border border-stone-700 rounded-md text-stone-200 flex justify-between items-center"
                                 >
                                     {ingredient}
-                                    <button className="p-1 mr-2 rounded-lg bg-red-800" onClick={(e) => removeIngredient(e, ingredient)}>-</button>
+                                    <button
+                                        aria-label={`Remove ${ingredient}`}
+                                        className="p-2 min-w-[2rem] min-h-[2rem] rounded-lg bg-red-700 hover:bg-red-600 text-white flex items-center justify-center"
+                                        onClick={(e) => removeIngredient(e, ingredient)}
+                                    >-</button>
                                 </li>
                             ))}
                         </ol>
                     </div>
                     <div className="w-full max-h-screen-1/2 overflow-y-scroll">
-                        <h2 className="text-xl font-medium sticky top-0 bg-gray-900">Instructions</h2>
+                        <h2 className="text-xl font-medium sticky top-0 bg-stone-950 text-red-400 pb-2">Instructions</h2>
                         <ol className="list-decimal mt-4 flex flex-col">
-                            {instructions.map((instruction) => (
+                            {instructions.map((instruction, index) => (
                                 <li
-                                    key={id++}
-                                    className="py-2 px-3 mb-2 bg-gray-700 rounded-md text-gray-300 flex flex-wrap justify-between"
+                                    key={index}
+                                    className="py-2 px-3 mb-2 bg-stone-800 border border-stone-700 rounded-md text-stone-200 flex flex-wrap justify-between items-start gap-2"
                                 >
                                     <p className="whitespace-pre-lines break-words max-w-[90%]">{instruction}</p>
-                                    <button className="p-1 max-h-8 rounded-lg bg-red-800 flex-shrink-0" onClick={(e) => removeInstruction(e, instruction)}>-</button>
+                                    <button
+                                        aria-label={`Remove instruction: ${instruction}`}
+                                        className="p-2 min-w-[2rem] min-h-[2rem] rounded-lg bg-red-700 hover:bg-red-600 text-white flex-shrink-0 flex items-center justify-center"
+                                        onClick={(e) => removeInstruction(e, instruction)}
+                                    >-</button>
                                 </li>
                             ))}
                         </ol>

@@ -15,12 +15,19 @@ export default async function updateCookbook(req, res) {
         return;
     }
 
-    const { id, title, description, recipes } = JSON.parse(req.body)
-    const recipeArray = [];
-    recipes.map(recipe => {
-        recipeArray.push(ObjectId(recipe._id));
-    });
-    console.log(recipeArray);
+    const { id, title, description, recipes } = JSON.parse(req.body);
+
+    if (!ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid cookbook ID' });
+    }
+
+    // Ownership check — only the cookbook's owner may update it
+    const ownedIds = (session.user.cookbooks?.myBooks || []).map(String);
+    if (!ownedIds.includes(id)) {
+        return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    const recipeArray = recipes.map(recipe => new ObjectId(recipe._id));
 
     try {
         const client = await clientPromise;
@@ -29,7 +36,7 @@ export default async function updateCookbook(req, res) {
 
         // Update the cookbook in database
         const result = await collection.updateOne(
-            { _id: ObjectId(id) },
+            { _id: new ObjectId(id) },
             {
                 $set: {
                     title,

@@ -11,8 +11,16 @@
 
 /* Set the color and shape of the scrollbar thumb */
 ::-webkit-scrollbar-thumb {
-  background-color: #888;
+  background-color: #4b5563;
   border-radius: 5px;
+}
+
+/* Global keyboard focus ring — applies to all interactive elements.
+   Uses :focus-visible so it only shows for keyboard navigation, not mouse clicks. */
+:focus-visible {
+  outline: 2px solid #fb7185; /* rose-400 */
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
 .max-h-half-screen {

@@ -1,93 +1,86 @@
 import Head from 'next/head'
-import { useEffect, useState } from 'react';
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useState } from 'react';
+import { getSession } from "next-auth/react";
 import Link from 'next/link';
-import clientPromise from '../../lib/mongodb';
 import Navbar from '../components/navbar';
 import Footer from '../components/footer';
-import Loading from '../components/loading';
 import Image from 'next/image';
 import bgImage from '../../public/images/chef.jpg';
-import { useRouter } from 'next/router';
-
-
 
 export default function Home() {
-  // State hook to keep track of the list of restaurants
-  const [restaurants, setRestaurants] = useState([]);
-  // Hook to access the Next.js session object
-  const { data: session, status } = useSession();
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [showContent, setShowContent] = useState(false);
 
-  const handleImageLoad = () => {
-    setImageLoaded(true);
-  };
-
-  useEffect(() => {
-    if (imageLoaded) {
-      setTimeout(() => {
-        setShowContent(true);
-      }, 300); // Delay showing the content to allow the fade-in effect to work
-    }
-  }, [imageLoaded]);
-
-
-  // Show loading indicator while the session is being checked
-
-  // Render the page
   return (
     <div className="min-h-screen flex flex-col">
-      {!imageLoaded && <Loading />}
       <Head>
         <title>CookBook Digital</title>
         <meta name="description" content="Organize your recipes and plan your dinners with CookBook Digital." />
       </Head>
       <Navbar />
 
-      <main className="bg-gray-800 text-gray-800 flex flex-grow">
+      <main className="relative bg-stone-950 text-stone-100 flex flex-col flex-grow">
+        {/* Background image fades in independently — content is always visible */}
         <Image
           src={bgImage}
-          alt="Background Image"
-          onLoadingComplete={handleImageLoad}
-          quality={100} // Adjust image quality if needed
-          className={`absolute inset-0 ${imageLoaded ? 'opacity-100' : 'opacity-0' // Apply opacity based on image loaded state
-            } transition-opacity duration-500 ease-in-out filter blur-md backdrop-filter backdrop-blur-lg backdrop-opacity-10 w-full h-full object-cover z--1`}
+          alt=""
+          onLoad={() => setImageLoaded(true)}
+          quality={65}
+          className={`absolute inset-0 ${imageLoaded ? 'opacity-100' : 'opacity-0'} transition-opacity duration-700 filter blur-md w-full h-full object-cover`}
         />
-        <div className="absolute inset-0 bg-gray-900 opacity-50"></div>
-        {imageLoaded &&
-          <section className="flex flex-col items-center mb-16 justify-center w-full z-10">
-            <div className={`max-w-4xl mx-auto px-4 ${showContent ? 'opacity-100 transition-opacity duration-1000' : 'opacity-0'
-              }`}>
-              <div className="flex flex-col items-center justify-center text-white">
-                <h1 className={`text-3xl md:text-5xl font-bold text-center mb-8 text-green-500 ${imageLoaded ? 'opacity-100' : 'opacity-0' // Apply opacity based on image loaded state
-                  } transition-opacity duration-1000 ease-in-out`}>Organize your recipes and plan your dinners</h1>
-                <p className=" text-sm md:text-xl text-center mb-8 md:mb-16">CookBook Digital is the only cookbook you&#39;ll ever need.</p>
-                <Link href="/signup" className="bg-green-500 text-gray-800 py-2 px-4 rounded hover:bg-green-600">
-                  Get started
-                </Link>
-              </div>
+        <div className="absolute inset-0 bg-stone-950 opacity-70 pointer-events-none" aria-hidden="true" />
+
+        {/* Hero */}
+        <section id="main-content" className="relative z-10 flex flex-col items-center justify-center flex-grow px-4 py-24">
+          <div className="max-w-2xl mx-auto text-center">
+            <h1 className="text-4xl md:text-6xl font-bold mb-5 text-rose-400 leading-tight">
+              Your recipes, organised.
+            </h1>
+            <p className="text-lg md:text-xl mb-10 text-stone-300">
+              Save recipes, build cookbooks, and discover new dishes — all in one place.
+            </p>
+            <Link
+              href="/signup"
+              className="inline-block bg-rose-600 text-white py-3 px-10 rounded-lg hover:bg-rose-500 font-semibold text-lg transition-colors"
+            >
+              Get started
+            </Link>
+            <p className="mt-4 text-sm text-stone-400">
+              Already have an account?{' '}
+              <Link href="/login" className="text-rose-400 hover:text-rose-300 underline">
+                Log in
+              </Link>
+            </p>
+          </div>
+        </section>
+
+        {/* Feature section */}
+        <section className="relative z-10 bg-stone-950 bg-opacity-85 border-t border-stone-800 py-14 px-4">
+          <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
+            <div>
+              <h3 className="text-base font-semibold text-rose-400 mb-2">Save recipes</h3>
+              <p className="text-stone-400 text-sm">Store your favourite recipes with ingredients and step-by-step instructions.</p>
             </div>
-          </section>
-        }
+            <div>
+              <h3 className="text-base font-semibold text-rose-400 mb-2">Build cookbooks</h3>
+              <p className="text-stone-400 text-sm">Organise recipes into themed collections you can revisit any time.</p>
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-rose-400 mb-2">Discover dishes</h3>
+              <p className="text-stone-400 text-sm">Browse the community stream and add recipes from other cooks to your collection.</p>
+            </div>
+          </div>
+        </section>
+
         <Footer />
       </main>
     </div>
   );
 }
 
-// Get server-side props to check the connection to MongoDB
 export async function getServerSideProps(context) {
-  try {
-    await clientPromise
-    return {
-      props: { isConnected: true },
-    }
-  } catch (e) {
-    console.log(e)
-    return {
-      props: { isConnected: false },
-    }
+  const session = await getSession(context);
+  if (session) {
+    return { redirect: { destination: '/dashboard' } };
   }
+  return { props: {} };
 }
-
